@@ -1,0 +1,219 @@
+globals [exposure ISOFloat ShutterSpeedFloat F-StopFloat EVFloat cdpm2 tripod? distanceFeet nearFocusDistance farFocusDistance thirtyFiveMM ]
+
+to calculate
+  ca
+  convertISO
+  convertShutterSpeed
+  convertF-stop
+  convertEV
+  convertEVtoCd
+  calculateExposure
+  tripodTest
+  flashDistance
+  depthOfField
+end
+
+to convertISO
+  set ISOFloat ISODropdown
+end
+
+to convertShutterSpeed
+  if ShutterSpeedDropdown = "4"
+  [set ShutterSpeedFloat 4]
+
+  if ShutterSpeedDropdown = "2"
+  [set ShutterSpeedFloat 2]
+
+  if ShutterSpeedDropdown = "1"
+  [set ShutterSpeedFloat 1]
+
+  if ShutterSpeedDropdown = "1/2"
+  [set ShutterSpeedFloat 0.5]
+
+  if ShutterSpeedDropdown = "1/4"
+  [set ShutterSpeedFloat 0.25]
+
+  if ShutterSpeedDropdown = "1/8"
+  [set ShutterSpeedFloat 0.125]
+
+  if ShutterSpeedDropdown = "1/15"
+  [set ShutterSpeedFloat (1 / 15)]
+
+  if ShutterSpeedDropdown = "1/30"
+  [set ShutterSpeedFloat (1 / 30)]
+
+  if ShutterSpeedDropdown = "1/60"
+  [set ShutterSpeedFloat (1 / 60)]
+
+  if ShutterSpeedDropdown = "1/125"
+  [set ShutterSpeedFloat (1 / 125)]
+
+  if ShutterSpeedDropdown = "1/250"
+  [set ShutterSpeedFloat (1 / 250)]
+
+  if ShutterSpeedDropdown = "1/500"
+  [set ShutterSpeedFloat (1 / 500)]
+
+  if ShutterSpeedDropdown = "1/1000"
+  [set ShutterSpeedFloat (1 / 1000)]
+
+end
+
+to convertF-stop
+  set F-stopFloat F-stopDropdown
+end
+
+to convertEV
+  if EVDropdown = "-2 - Full moonlight"
+  [set EVFloat -2]
+
+  if EVDropdown = "-1"
+  [set EVFloat -1]
+
+  if EVDropdown = "0"
+  [set EVFloat 0]
+
+  if EVDropdown = "1"
+  [set EVFloat 1]
+  if EVDropdown ="2 - distant lit buildings"
+  [set EVFloat 2]
+
+  if EVDropdown = "3"
+  [set EVFloat 3]
+
+  if EVDropdown = "4 - Christmas Tree Lights, floodlights"
+  [set EVFloat 4]
+
+  if EVDropdown = "5 - Night traffic"
+  [set EVFloat 5]
+
+  if EVDropdown ="6 - Indoor Party"
+  [set EVFloat 6]
+
+  if EVDropdown = "7 - Amusement parks, offices"
+  [set EVFloat 7]
+
+  if EVDropdown = "8 - Flourescent lighting, streetlights, circus"
+  [set EVFloat 8]
+
+  if EVDropdown = "9 - Neon and signage, stage shows"
+  [set EVFloat 9]
+
+  if EVDropdown = "10 - After sunset"
+  [set EVFloat 10]
+
+  if EVDropdown = "11 - Shady"
+  [set EVFloat 11]
+
+  if EVDropdown = "12 - Overcast, at sunset"
+  [set EVFloat 12]
+
+  if EVDropdown = "13 - Cloudy"
+  [set EVFloat 13]
+
+  if EVDropdown = "14 - Hazy"
+  [set EVFloat 14]
+
+  if EVDropdown = "15 - Sunny"
+  [set EVFloat 15]
+
+  if EVDropdown = "16 - Sand and Snow"
+  [set EVFloat 16]
+
+end
+
+to convertEVtoCd
+  set cdpm2 (2 ^ (EVFloat - 3))
+end
+
+to calculateExposure
+  ;;formula fstop^2/shutterSpeed = (Luminance + exposureDifference)*ISO/12.5
+  ;;First solve for the luminance difference, x in cd/m2  x
+  let exposure1 ((12.5 * (F-stopFloat ^ 2)) / (ShutterSpeedFloat * ISOFloat)) - cdpm2
+;  print exposure1
+  ;;then convert L+x and L into EV, and subtract difference in units EV to solve for exposure
+  ;;avoiding taking the log of a negative number
+  ;; L+x - L = x
+  set exposure (-1 * (((log (cdpm2 + exposure1) 2) + 3) - ((log (cdpm2) 2) + 3)))
+
+  ;set exposure ((12.5 * (F-stopFloat ^ 2)) / (ShutterSpeedFloat * ISOFloat)) - cdpm2
+  ;set exposure ((log exposure 2) + 3)
+  ;set exposure (((1.44279 * ln(exposure)) + 3))
+end
+
+to tripodTest
+  if-else 1 / focalLengthLens < ShutterSpeedFloat
+  [set tripod? true]
+  [set tripod? false]
+end
+
+to flashDistance
+  set distanceFeet 0
+  let ISO100List  [3.5 7 20]
+  let ISO200List  [5 10 28]
+  let ISO400List  [7 14 40]
+  let ISO800List  [9.9 19.8 56.5]
+  let ISO1600List [14  28  79.9]
+  let ISO3200List [19.7 39.6  113]
+  ;;let allISOList [ISO100List ISO200List ISO400List ISO800List ISO1600List ISO3200List]
+  let allISOList [[3.5 7 20] [5 10 28] [7 14 40] [9.9 19.8 56.5] [14 28 79.9] [19.7 39.6 113]]
+  let currentPower 0
+  let localISO 0
+
+  if FlashPowerDropdown = "low"
+  [set currentPower 0]
+
+  if FlashPowerDropdown = "medium"
+  [set currentPower 1]
+
+  if FlashPowerDropdown = "high"
+  [set currentPower 2]
+
+  if ISODropdown = 100
+  [set localISO 0]
+
+  if ISODropdown = 200
+  [set localISO 1]
+
+  if ISODropdown = 400
+  [set localISO 2]
+
+  if ISODropdown = 800
+  [set localISO 3]
+
+  if ISODropdown = 1600
+  [set localISO 4]
+
+  if ISODropdown = 3200
+  [set localISO 5]
+
+   let gn1 item localISO allISOList
+   let gn2 ((item currentPower gn1))
+
+   set distanceFeet ((gn2 / F-StopFloat) * 3.28084)
+end
+
+to depthOfField
+  let distanceMM (distanceFeetSlider * 304.8)
+  let circleOfConfusion .029
+
+  if filmStock = "35mm"
+  [set circleOfConfusion .029]
+
+  if filmStock = "4.5x6"
+  [set circleOfConfusion .047]
+
+  if filmStock = "6x6"
+  [set circleOfConfusion 0.053]
+
+  if filmStock = "6x9"
+  [set circleOfConfusion 0.067]
+
+  let H (((focalLengthLens ^ 2)/(F-stopFloat * circleOfConfusion) + focalLengthLens))
+
+  set nearFocusDistance (((distanceMM * (H - focalLengthLens)) / (H + distanceMM - (2 * focalLengthLens))) / 304.8)
+
+  set farFocusDistance (((distanceMM * (H - focalLengthLens)) / (H - distanceMM)) / 304.8)
+  if farFocusDistance < 0
+  [set farFocusDistance "inf."]
+end
