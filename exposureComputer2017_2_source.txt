@@ -123,22 +123,21 @@ to convertEV
 end
 
 to convertEVtoCd
-  set cdpm2 (2 ^ (EVFloat - 3))
+  set cd (2 ^ (EVFloat - 3)) ; cd is candella per meter ^2. It is the density of light and doesn't have to do with the distance, in feet.
 end
 
 to calculateExposure
   ;;formula fstop^2/shutterSpeed = (Luminance + exposureDifference)*ISO/12.5
-  ;;First solve for the luminance difference, x in cd/m2  x
-  let exposure1 ((12.5 * (F-stopFloat ^ 2)) / (ShutterSpeedFloat * ISOFloat)) - cdpm2
-;  print exposure1
-  ;;then convert L+x and L into EV, and subtract difference in units EV to solve for exposure
-  ;;avoiding taking the log of a negative number
-  ;; L+x - L = x
-  set exposure (-1 * (((log (cdpm2 + exposure1) 2) + 3) - ((log (cdpm2) 2) + 3)))
+  ;;First solve for the exposure difference, x in candellas per meter ^2 (cd)
 
-  ;set exposure ((12.5 * (F-stopFloat ^ 2)) / (ShutterSpeedFloat * ISOFloat)) - cdpm2
-  ;set exposure ((log exposure 2) + 3)
-  ;set exposure (((1.44279 * ln(exposure)) + 3))
+  let exposureDif ((12.5 * (F-stopFloat ^ 2)) / (ShutterSpeedFloat * ISOFloat)) - cd
+
+  ;;then convert Luminence + (exposureDif ) and Luminance into EV, and subtract difference in units EV to solve for exposure
+  ;;avoiding taking the log of a negative number
+  ;; Luminence + exposureDif - Luminence = final EV aka. exposure
+
+  set exposure (-1 * (((log (cd + exposureDiff) 2) + 3) - ((log (cd) 2) + 3)))
+
 end
 
 to tripodTest
